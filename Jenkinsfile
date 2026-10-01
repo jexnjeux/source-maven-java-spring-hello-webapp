@@ -1,0 +1,58 @@
+pipeline {
+  agent none
+  stages {
+    stage('Checkout') {
+      agent {
+        docker { image 'maven:3-eclipse-temurin-21' }
+      }
+      steps {
+        git branch: 'main', url: 'https://github.com/jexnjeux/source-maven-java-spring-hello-webapp'
+      }
+    }
+    stage('Test Application') {
+      agent {
+        docker { image 'maven:3-eclipse-temurin-21' }
+      }
+      steps {
+        sh 'mvn test'
+      }
+    }
+    stage('Build Application') {
+      agent {
+        docker { image 'maven:3-eclipse-temurin-21' }
+      }
+      steps {
+        sh 'mvn clean package -DskipTests=true'
+      }
+    }
+    stage('Build Container Image') {
+      agent { label 'controller' }
+      steps {
+        sh 'docker image build -t my-tomcat .'
+      }
+    }
+    stage('Tag Container Image') {
+      agent { label 'controller' }
+      steps {
+        sh 'docker image tag my-tomcat najieun/my-tomcat:v1' // Tagging with build number
+        sh 'docker image tag my-tomcat najieun/my-tomcat:latest' // Tagging with latest
+      }
+    }
+    stage('Push Container Image') {
+      agent { label 'controller' }
+      steps {
+        withDockerRegistry(credentialsId: 'docker-registry-credential', url: 'https://index.docker.io/v1/') {
+          sh 'docker image push najieun/my-tomcat:v1' // Tagging with build number
+          sh 'docker image push najieun/my-tomcat:latest' // Tagging with latest
+        }
+      }
+    }
+    stage('Run Container') {
+      agent { label 'controller' }
+      steps {
+        sh 'docker container run --detach --name myweb -p 80:8080 najieun/my-tomcat:latest'
+      }
+    }
+  }
+}
+
