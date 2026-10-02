@@ -1,0 +1,57 @@
+pipeline{
+  agent { 
+    kubernetes {
+      yaml '''
+        apiVersion: v1
+        kind: Pod
+        spec:
+          containers:
+          - name: maven
+          image: maven:3-eclipse-temurin-21
+          command:
+          - sleep
+          args:
+          - infinity
+    } 
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        container('maven') {
+          git branch: 'main', url: 'https://github.com/jexnjeux/source-maven-java-spring-hello-webapp'
+        }
+      }
+    }
+    stage('Test Application') {
+      steps {
+        container('maven') {
+          sh 'mvn test'
+        }
+      }
+    }
+    stage('Build Application') {
+      steps {
+        container('maven') {
+          sh 'mvn clean package -DskipTests=true'
+        }
+      }
+    }
+    stage('Build Container Image') {
+      steps {
+      }
+    }
+    stage('Tag Container Image') {
+      steps {
+      }
+    }
+    stage('Push Container Image') {
+      steps {
+      }
+    }
+    stage('Run Container') {
+      steps {
+      }
+    }
+  }
+}
+
