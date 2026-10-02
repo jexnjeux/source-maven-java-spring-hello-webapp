@@ -36,6 +36,11 @@ spec:
     }
   }
 
+  environment {
+    DOCKERFILE = 'Dockerfile'
+    IMAGE_TAG = 'najieun/my-tomcat'
+  }
+
   stages {
     stage('Checkout') {
       steps {
@@ -58,6 +63,29 @@ spec:
       steps {
         container('maven') {
           sh 'mvn clean package -DskipTests=true'
+        }
+      }
+    }
+
+    stage('Build Container Image') {
+      steps {
+        container('buildah') {
+          sh """
+            buildah build -f ${DOCKERFILE} \
+              -t ${IMAGE_TAG}:${BUILD_NUMBER} \
+              -t ${IMAGE_TAG}:latest .
+          """
+        }
+      }
+    }
+
+    stage('Push Container Image') {
+      steps {
+        container('buildah') {
+          sh """
+            buildah push ${IMAGE_TAG}:${BUILD_NUMBER}
+            buildah push ${IMAGE_TAG}:latest
+          """
         }
       }
     }
