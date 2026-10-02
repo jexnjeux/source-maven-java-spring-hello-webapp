@@ -7,12 +7,12 @@ pipeline{
         spec:
           containers:
           - name: maven
-          image: maven:3-eclipse-temurin-21
-          command:
-          - sleep
-          args:
-          - infinity
-	'''
+            image: maven:3-eclipse-temurin-21
+            command:
+            - sleep
+            args:
+            - infinity
+'''
     } 
   }
   stages {
